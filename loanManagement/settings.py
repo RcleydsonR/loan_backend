@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-from datetime import timedelta
 from pathlib import Path
 from decouple import config
 from dj_database_url import parse
@@ -25,7 +24,9 @@ SECRET_KEY = config('SECRET_KEY', default='not avaliable')
 DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = ['*']
 
-LOCAL_APPS = ()
+LOCAL_APPS = (
+    'loan',
+)
 # Application definition
 
 INSTALLED_APPS = (
@@ -38,7 +39,7 @@ INSTALLED_APPS = (
 
     # THIRD-PARTY
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
  ) + LOCAL_APPS
 
 MIDDLEWARE = [
@@ -125,13 +126,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
-}
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=4),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
 }

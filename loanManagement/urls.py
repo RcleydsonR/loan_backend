@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, re_path
+from rest_framework.authtoken import views
 
 from django.conf import settings
 
@@ -24,5 +25,6 @@ for app in settings.LOCAL_APPS:
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
-    re_path(r'^api/', include(url_api))
+    re_path(r'^api/', include(url_api)),
+    re_path(r'api-token-auth/', views.obtain_auth_token)
 ]
