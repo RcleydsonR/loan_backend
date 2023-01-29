@@ -6,11 +6,11 @@ services:
             - POSTGRES_PASSWORD=postgres
         ports:
             - 5000:5432
-    lending:
+    loan_management:
         build: .
-        container_name: lending_backend
+        container_name: loan_management_backend
         environment:
-            - DJANGO_SETTINGS_MODULE=lending.settings
+            - DJANGO_SETTINGS_MODULE=loanManagement.settings
         volumes:
             - .:/var/www
         ports:
