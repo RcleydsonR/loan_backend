@@ -1,0 +1,13 @@
+Django==4.1.5
+django-cors-headers==3.13.0
+djangorestframework==3.14.0
+djangorestframework-simplejwt
+dj-database-url==1.2.0
+psycopg2==2.9.5
+python-decouple==3.7
+Pillow==9.4.0
+gunicorn
+
+# Testing
+coverage
+pytest==7.2.1

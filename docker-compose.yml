@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+    postgres:
+        image: postgres:latest
+        environment:
+            - POSTGRES_PASSWORD=postgres
+        ports:
+            - 5000:5432
+    lending:
+        build: .
+        container_name: lending_backend
+        environment:
+            - DJANGO_SETTINGS_MODULE=lending.settings
+        volumes:
+            - .:/var/www
+        ports:
+            - 8000:8000
+        depends_on:
+            - postgres
