@@ -14,8 +14,8 @@ class Loan(models.Model):
         max_digits=6, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))])
     interestRate = models.DecimalField(
-        max_digits=6, decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01')), MaxValueValidator(Decimal('1.00'))])
+        max_digits=5, decimal_places=4,
+        validators=[MinValueValidator(Decimal('0.0001')), MaxValueValidator(Decimal('1.0000'))])
     interestType = models.CharField(max_length=8, choices=INTEREST_TYPE)
     ipAddress = models.GenericIPAddressField()
     solicitationDate = models.DateTimeField()
