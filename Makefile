@@ -19,3 +19,6 @@ ifeq ($(TEST),)
 else
 	docker-compose run --rm --entrypoint "pytest $(FILE) -s --disable-warnings -k $(TEST)" loan_management
 endif
+
+test-coverage:
+	docker-compose run --rm --entrypoint "./test_coverage.sh" loan_management
