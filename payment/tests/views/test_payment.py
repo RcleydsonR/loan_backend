@@ -1,10 +1,10 @@
-
 from core.tests.recipes import user as user_recipe
 
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.test import TestCase
+from django.utils import timezone
 from core.tests.mixin import APITestMixin
 from rest_framework.reverse import reverse_lazy
 
@@ -15,6 +15,9 @@ from loan.tests.recipes import loan as loan_recipe
 
 from parameterized import parameterized
 
+NOT_FOUND_MESSAGE = 'Não encontrado.'
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+
 
 class PaymentAPIViewTest(APITestMixin, TestCase):
     url = reverse_lazy("payment-create-list")
@@ -22,12 +25,12 @@ class PaymentAPIViewTest(APITestMixin, TestCase):
 
     def setUp(self):
         self.loan = loan_recipe.make(
-            user=self.user, solicitationDate=datetime.strptime(self.loan_create_date, "%Y-%m-%dT%H:%M:%S.%fZ"))
+            user=self.user, solicitationDate=timezone.datetime.strptime(self.loan_create_date, DATE_FORMAT))
 
     def _payload(self):
         return {
             "value": "120",
-            "paymentDate": datetime.now(),
+            "paymentDate": timezone.datetime.now(),
             "loan": self.loan.idLoan
         }
 
@@ -40,7 +43,7 @@ class PaymentAPIViewTest(APITestMixin, TestCase):
 
         payment = Payment.objects.first()
         self.assertEqual(payment.value, Decimal(payload["value"]))
-        self.assertIsInstance(payment.paymentDate, datetime)
+        self.assertIsInstance(payment.paymentDate, timezone.datetime)
         self.assertEqual(payment.loan.idLoan, payload["loan"])
 
     @parameterized.expand([
@@ -75,7 +78,7 @@ class PaymentAPIViewTest(APITestMixin, TestCase):
         self.assertIn('Usuário não é dono do empréstimo referenciado', response.json())
 
     def test_fail_to_create_payment_loan_date_greater_than_payment_date(self):
-        invalid_date = datetime.strptime(self.loan_create_date, "%Y-%m-%dT%H:%M:%S.%fZ") - timedelta(days=1)
+        invalid_date = timezone.datetime.strptime(self.loan_create_date, DATE_FORMAT) - timedelta(days=1)
         payload = self._payload()
         payload['paymentDate'] = invalid_date
 
@@ -118,14 +121,14 @@ class PaymentRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
 
     def setUp(self):
         self.loan = loan_recipe.make(
-            user=self.user, solicitationDate=datetime.strptime(self.loan_create_date, "%Y-%m-%dT%H:%M:%S.%fZ"))
+            user=self.user, solicitationDate=timezone.datetime.strptime(self.loan_create_date, DATE_FORMAT))
         self.payment = payment_recipe.make(loan=self.loan)
         self.url = self.get_url()
 
     def _payload(self):
         return {
             "value": "120",
-            "paymentDate": datetime.now(),
+            "paymentDate": timezone.datetime.now(),
             "loan": self.loan.idLoan
         }
 
@@ -137,7 +140,7 @@ class PaymentRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
     def test_detail_loan_should_success(self):
         response = self.client.get(self.url, format="json")
 
-        date_without_tz = datetime.strptime(response.json()["paymentDate"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        date_without_tz = timezone.datetime.strptime(response.json()["paymentDate"], DATE_FORMAT)
         self.assertEqual(response.status_code, 200, response.json())
         self.assertEqual(self.payment.value, Decimal(response.json()["value"]))
         self.assertEqual(self.payment.paymentDate.replace(tzinfo=None), date_without_tz)
@@ -149,7 +152,7 @@ class PaymentRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
         response = self.client.get(url, format="json")
 
         self.assertEqual(response.status_code, 404, response.json())
-        self.assertIn('Não encontrado.', response.json()['detail'])
+        self.assertIn(NOT_FOUND_MESSAGE, response.json()['detail'])
 
     def test_detail_payment_should_fail_when_payment_is_from_other_user(self):
         payment = payment_recipe.make()
@@ -158,7 +161,7 @@ class PaymentRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
         response = self.client.get(url, format="json")
 
         self.assertEqual(response.status_code, 404, response.json())
-        self.assertIn('Não encontrado.', response.json()['detail'])
+        self.assertIn(NOT_FOUND_MESSAGE, response.json()['detail'])
 
     def test_update_loan_with_success(self):
         payload = self._payload()
@@ -169,7 +172,7 @@ class PaymentRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
         self.assertEqual(Payment.objects.count(), 1)
 
         self.payment.refresh_from_db()
-        date_without_tz = datetime.strptime(response.json()["paymentDate"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        date_without_tz = timezone.datetime.strptime(response.json()["paymentDate"], DATE_FORMAT)
         self.assertEqual(response.status_code, 200, response.json())
         self.assertEqual(self.payment.value, Decimal(response.json()["value"]))
         self.assertEqual(self.payment.paymentDate.replace(tzinfo=None), date_without_tz)
@@ -182,7 +185,7 @@ class PaymentRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
         response = self.client.patch(url, data=payload, format="json")
 
         self.assertEqual(response.status_code, 404, response.json())
-        self.assertIn('Não encontrado.', response.json()['detail'])
+        self.assertIn(NOT_FOUND_MESSAGE, response.json()['detail'])
 
     def test_update_payment_should_fail_when_payment_is_from_other_user(self):
         payload = self._payload()
@@ -192,10 +195,10 @@ class PaymentRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
         response = self.client.patch(url, data=payload, format="json")
 
         self.assertEqual(response.status_code, 404, response.json())
-        self.assertIn('Não encontrado.', response.json()['detail'])
+        self.assertIn(NOT_FOUND_MESSAGE, response.json()['detail'])
 
     def test_fail_to_update_payment_loan_date_greater_than_payment_date(self):
-        invalid_date = datetime.strptime(self.loan_create_date, "%Y-%m-%dT%H:%M:%S.%fZ") - timedelta(days=1)
+        invalid_date = timezone.datetime.strptime(self.loan_create_date, DATE_FORMAT) - timedelta(days=1)
         payload = self._payload()
         payload['paymentDate'] = invalid_date
         del payload['loan']

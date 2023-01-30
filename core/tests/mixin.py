@@ -32,7 +32,6 @@ class APITestMixin:
             User,
             username=self.username, password=self.password, **self.usuario_kwargs
         ).make()
-        self.user.id = self.user.id
         self.client = self.get_client()
 
     @classmethod

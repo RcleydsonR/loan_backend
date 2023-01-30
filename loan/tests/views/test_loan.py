@@ -3,9 +3,10 @@ from core.consts.interestType import SIMPLE_INTEREST, COMPOUND_INTEREST
 from core.tests.recipes import user as user_recipe
 
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.test import TestCase
+from django.utils import timezone
 from core.tests.mixin import APITestMixin
 from rest_framework.reverse import reverse_lazy
 
@@ -15,6 +16,9 @@ from loan.tests.recipes import loan as loan_recipe
 from payment.tests.recipes import payment as payment_recipe
 
 from parameterized import parameterized
+
+NOT_FOUND_MESSAGE = 'Não encontrado.'
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
 class LoanAPIViewTest(APITestMixin, TestCase):
@@ -41,7 +45,7 @@ class LoanAPIViewTest(APITestMixin, TestCase):
         self.assertEqual(loan.nominalValue, payload["nominalValue"])
         self.assertEqual(loan.interestRate, payload["interestRate"])
         self.assertEqual(loan.interestType, payload["interestType"])
-        self.assertIsInstance(loan.solicitationDate, datetime)
+        self.assertIsInstance(loan.solicitationDate, timezone.datetime)
         self.assertEqual(loan.bank, payload["bank"])
         self.assertEqual(loan.client, payload["client"])
 
@@ -111,7 +115,7 @@ class LoanRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
 
     def setUp(self):
         self.loan = loan_recipe.make(
-            user=self.user, solicitationDate=datetime.strptime(self.loan_create_date, "%Y-%m-%dT%H:%M:%S.%fZ"))
+            user=self.user, solicitationDate=timezone.datetime.strptime(self.loan_create_date, DATE_FORMAT))
         self.url = self.get_url()
 
     def _payload(self):
@@ -144,8 +148,8 @@ class LoanRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
 
     def test_detail_loan_should_return_correct_debit_balance_for_simple_interest_type(self):
         loan = loan_recipe.make(
-            user=self.user, solicitationDate=(datetime.now() - timedelta(days=31)),
-            nominalValue=Decimal("400"), interestRate=Decimal("0.045"),
+            user=self.user, solicitationDate=(timezone.datetime.now() - timedelta(days=31)),
+            nominalValue=Decimal("400"), interestRate=Decimal("0.06"),
             interestType=SIMPLE_INTEREST
         )
         payment = payment_recipe.make(loan=loan, value=Decimal("300"))
@@ -168,7 +172,7 @@ class LoanRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
         response = self.client.get(url, format="json")
 
         self.assertEqual(response.status_code, 404, response.json())
-        self.assertIn('Não encontrado.', response.json()['detail'])
+        self.assertIn(NOT_FOUND_MESSAGE, response.json()['detail'])
 
     def test_detail_loan_should_fail_when_loan_is_from_other_user(self):
         user = user_recipe.make()
@@ -178,7 +182,7 @@ class LoanRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
         response = self.client.get(url, format="json")
 
         self.assertEqual(response.status_code, 404, response.json())
-        self.assertIn('Não encontrado.', response.json()['detail'])
+        self.assertIn(NOT_FOUND_MESSAGE, response.json()['detail'])
 
     def test_update_loan_with_success(self):
         payload = self._payload()
@@ -224,7 +228,7 @@ class LoanRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
         response = self.client.patch(url, data=payload, format="json")
 
         self.assertEqual(response.status_code, 404, response.json())
-        self.assertIn('Não encontrado.', response.json()['detail'])
+        self.assertIn(NOT_FOUND_MESSAGE, response.json()['detail'])
 
     def test_update_loan_should_fail_when_loan_is_from_other_user(self):
         payload = self._payload()
@@ -235,4 +239,4 @@ class LoanRetrieveUpdateAPIViewTest(APITestMixin, TestCase):
         response = self.client.patch(url, data=payload, format="json")
 
         self.assertEqual(response.status_code, 404, response.json())
-        self.assertIn('Não encontrado.', response.json()['detail'])
+        self.assertIn(NOT_FOUND_MESSAGE, response.json()['detail'])
