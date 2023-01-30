@@ -16,7 +16,6 @@ class LoanSerializer(serializers.ModelSerializer):
         read_only_fields = ('idLoan', 'ipAddress', 'user')
 
     def create(self, validated_data):
-        print(self.context.get('request').user)
         validated_data['ipAddress'] = self.context.get('request').META.get("REMOTE_ADDR")
         validated_data['user'] = self.context.get('request').user
         return Loan.objects.create(**validated_data)
