@@ -26,6 +26,7 @@ ALLOWED_HOSTS = ['*']
 
 LOCAL_APPS = (
     'loan',
+    'payment'
 )
 # Application definition
 
@@ -38,6 +39,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
 
     # THIRD-PARTY
+    'django_filters',
     'rest_framework',
     'rest_framework.authtoken',
  ) + LOCAL_APPS
