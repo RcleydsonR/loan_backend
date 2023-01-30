@@ -14,8 +14,8 @@ class APITestMixin:
     password = '12345678'
     usuario_kwargs = {}
 
-    def get_header_credencial(self):
-        token = Token.objects.create(user=self.user)
+    def get_header_credencial(self, user=None):
+        token = Token.objects.create(user=(user if user else self.user))
         return str(token.key)
 
     def get_client(self):
